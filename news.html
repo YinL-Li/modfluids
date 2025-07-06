@@ -1,28 +1,348 @@
----
-refactor: true
-title: member
-# front matter tells Jekyll to process Liquid
----
-
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+    <title>ModFluids - 团队记事</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: url('{{ "/assets/images/campus-background.jpg" | relative_url }}') no-repeat center center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: url("/assets/images/campus-background.jpg") no-repeat center center;
             background-size: cover;
             background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        .container {
+            /* Match navigation width: margin 0 15% */
+            margin: 0 15%;
+            background: rgba(255, 255, 255, 0.9);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+            color: #2c3e50;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #6c757d;
+            font-weight: 300;
+        }
+
+        .content {
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .news-item {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .news-item:hover {
+            background-color: rgba(248, 249, 250, 0.95);
+        }
+
+        .news-header {
+            padding: 20px 0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .news-meta {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            gap: 20px;
+        }
+
+        .news-date {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .news-location {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .news-location::before {
+            content: '@';
+            margin-right: 2px;
+        }
+
+        .news-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .expand-indicator {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 0.9em;
+            transition: transform 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .expand-indicator.expanded {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .news-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            background: rgba(248, 249, 250, 0.95);
+            border-top: 1px solid #e9ecef;
+        }
+
+        .news-content.expanded {
+            max-height: 1000px;
+            padding: 20px 0;
+        }
+
+        .news-content-inner {
+            color: #495057;
+            line-height: 1.7;
+            font-size: 0.95em;
+        }
+
+        .news-content-inner strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .news-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .news-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        .news-images {
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .news-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+
+        .news-image:hover {
+            transform: scale(1.02);
+        }
+
+        .news-image.loading {
+            opacity: 0.6;
+        }
+
+        .news-image.loaded {
+            opacity: 1;
+        }
+
+        .news-image.error {
+            opacity: 0.4;
+            background: #f8f9fa url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f8f9fa"/><text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-family="Arial" font-size="12" fill="%236c757d">加载失败</text></svg>') no-repeat center center;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #bbb;
+        }
+
+        .footer {
+            background: rgba(248, 249, 250, 0.95);
+            color: #6c757d;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.9em;
+        }
+
+        .load-more {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .load-more-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+
+        .load-more-btn:hover {
+            background: #0056b3;
+        }
+
+        .load-more-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* Responsive design matching navigation behavior */
+        @media (max-width: 768px) {
+            .container {
+                margin: 0 5%;
+                box-shadow: none;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 10px 20px;
+            }
+            
+            .news-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .expand-indicator {
+                right: 20px;
+            }
+            
+            .footer {
+                padding: 20px;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 480px) {
+            .container {
+                margin: 0 2%;
+            }
         }
     </style>
 </head>
-
-<body class="is-preload">
+<body>
     
-    <!-- Wrapper -->
     <div id="wrapper" class="fade-in">
 
         <!-- Intro -->
@@ -48,44 +368,344 @@ title: member
             </ul>
         </nav>
 
-        <!-- Main Content -->
-        <div id="main">
-            <section class="post">
-                {% for post in site.posts %}
-                    {% if post.title == "News" %}
-                    {{ post.content }}
-                    {% endif %}
-                {% endfor %}
-            </section>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>团队记事</h1>
+            <p>ModFluids Research Group News & Updates</p>
         </div>
 
+        <div class="content">
+            <div class="news-list">
+                <div class="news-item">
+                    <div class="news-header" onclick="toggleNews(this)">
+                        <div class="news-meta">
+                            <div class="news-date">2025.06</div>
+                            <div class="news-location">杭州紫金港</div>
+                        </div>
+                        <div class="news-title">研究小组夜游浙大紫金港校园</div>
+                        <div class="expand-indicator">▼</div>
+                    </div>
+                    <div class="news-content">
+                        <div class="news-content-inner">
+                            经过一整个学年的紧张学习和研究工作，小组成员们终于迎来了期待已久的放松时光。大家相约在紫金港校园的餐厅，享受美食的同时分享这一学年的收获和感悟。饭后，尽管天空飘着细雨，但这丝毫没有影响大家的兴致，一行人漫步在雨后的启真湖畔，欣赏着夜晚校园的宁静与美丽。
+                            
+                            <div class="news-images">
+                                <img data-src="assets/images/2025-06-28-1.jpg" alt="紫金港夜景" class="news-image lazy" onclick="openImageModal(this)">
+                                <img data-src="assets/images/2025-06-28-2.jpg" alt="启真湖夜景" class="news-image lazy" onclick="openImageModal(this)">
+                                <img data-src="assets/images/2025-06-28-3.jpg" alt="启真湖夜景" class="news-image lazy" onclick="openImageModal(this)">
+                            </div>
+                            
+                            这次夜游不仅是对辛勤工作的奖励，更是增进团队凝聚力的美好时光。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="news-item">
+                    <div class="news-header" onclick="toggleNews(this)">
+                        <div class="news-meta">
+                            <div class="news-date">2025.05</div>
+                            <div class="news-location">杭州青山湖</div>
+                        </div>
+                        <div class="news-title">研究小组初夏户外徒步</div>
+                        <div class="expand-indicator">▼</div>
+                    </div>
+                    <div class="news-content">
+                        <div class="news-content-inner">
+                            初夏时节，阳光明媚，正是户外活动的好时机。作为月度团队建设活动，研究小组全体成员以及热心的外援老师们共同前往风景秀丽的青山湖。
+                            
+                            <div class="news-images">
+                                <img data-src="assets/images/2025-05-24-1.jpg" alt="青山湖徒步" class="news-image lazy" onclick="openImageModal(this)">
+                                <img data-src="assets/images/2025-05-24-2.jpg" alt="团队合影" class="news-image lazy" onclick="openImageModal(this)">
+                                <img data-src="assets/images/2025-05-24-3.jpg" alt="聚餐现场" class="news-image lazy" onclick="openImageModal(this)">
+                            </div>
+                            
+                            大家沿着湖边环线进行徒步，在享受自然美景的同时，也增进了彼此的了解和友谊。徒步结束后，团队在湖边餐厅聚餐，分享徒步的感受和生活中的趣事，整个活动充满了欢声笑语。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="news-item">
+                    <div class="news-header" onclick="toggleNews(this)">
+                        <div class="news-meta">
+                            <div class="news-date">2025.05</div>
+                            <div class="news-location">杭州瓶窑</div>
+                        </div>
+                        <div class="news-title">小组邀请浙江大学谢芳芳副教授来国新院交流报告</div>
+                        <div class="expand-indicator">▼</div>
+                    </div>
+                    <div class="news-content">
+                        <div class="news-content-inner">
+                            李炳华、陈松老师邀请浙江大学航空航天学院飞行器推进与动力研究所副所长、国家级青年人才谢芳芳老师来访智慧民航科创中心。
+                            
+                            <div class="news-images">
+                                <img data-src="https://picsum.photos/400/300?random=6" alt="学术报告现场" class="news-image lazy" onclick="openImageModal(this)">
+                                <img data-src="https://picsum.photos/400/300?random=7" alt="实验室参观" class="news-image lazy" onclick="openImageModal(this)">
+                            </div>
+                            
+                            谢老师为大家带来了题为<strong>《机器学习赋能飞行器流动建模、优化和控制》</strong>的精彩学术报告，深入浅出地介绍了机器学习在航空航天领域的最新应用进展。报告结束后，谢老师还参观了中心的仿生飞行器实验室、跨介质飞行器实验室和航空大数据实验室，双方就AI4Fluids领域的深度合作进行了热烈讨论。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="news-item">
+                    <div class="news-header" onclick="toggleNews(this)">
+                        <div class="news-meta">
+                            <div class="news-date">2025.04</div>
+                            <div class="news-location">北京海淀</div>
+                        </div>
+                        <div class="news-title">小组成员参加第二届空天前沿大会（航空学报60周年）</div>
+                        <div class="expand-indicator">▼</div>
+                    </div>
+                    <div class="news-content">
+                        <div class="news-content-inner">
+                            小组全体成员齐聚北京，参加由《航空学报》主办的第二届空天前沿大会，这也是庆祝《航空学报》创刊60周年的重要学术盛会。
+                            
+                            <div class="news-images">
+                                <img data-src="https://picsum.photos/400/300?random=8" alt="大会现场" class="news-image lazy" onclick="openImageModal(this)">
+                                <img data-src="https://picsum.photos/400/300?random=9" alt="学术交流" class="news-image lazy" onclick="openImageModal(this)">
+                            </div>
+                            
+                            作为航空航天领域的顶级期刊，《航空学报》举办的会议汇集了国内外顶尖专家学者，展示了空天领域的最新研究成果和发展趋势。通过参会，小组成员不仅了解了领域前沿动态，还与同行建立了广泛的学术联系。
+                            
+                            <a href="https://h3i.buaa.edu.cn/info/1707/3175.htm" class="news-link" target="_blank">查看SAC-News详细报道</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="news-item">
+                    <div class="news-header" onclick="toggleNews(this)">
+                        <div class="news-meta">
+                            <div class="news-date">2024.10</div>
+                            <div class="news-location">苏州太仓</div>
+                        </div>
+                        <div class="news-title">李炳华博士参加2024 MEAE国际会议并做邀请报告</div>
+                        <div class="expand-indicator">▼</div>
+                    </div>
+                    <div class="news-content">
+                        <div class="news-content-inner">
+                            李炳华博士受邀参加了在苏州太仓举行的2024年机械工程与自动化工程国际会议(MEAE)，并作为特邀嘉宾做了精彩的学术报告。
+                            
+                            <div class="news-images">
+                                <img data-src="https://picsum.photos/400/300?random=10" alt="报告现场" class="news-image lazy" onclick="openImageModal(this)">
+                            </div>
+                            
+                            <strong>报告题目：</strong>基于动态模态分解的大规模流场特征分析技术研究
+                            <br><br>
+                            <strong>Report Title:</strong> Dynamic Mode Decomposition Based Algorithms as Feature Detection Techniques: Application to Large Flow Databases
+                            <br><br>
+                            报告重点介绍了动态模态分解(DMD)技术在大规模流场数据分析中的应用，引起了与会专家的广泛讨论。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024-2025 ModFluids Research Group</p>
+            <p>流体智能分析与控制小组</p>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal" onclick="closeImageModal()">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" class="modal-image">
+        </div>
     </div>
 
     <script>
-        window.onscroll = function () {
-            var nav = document.getElementById("nav");
-            if (window.pageYOffset > 0) {
-                console.log('asdasdad')
-                nav.classList.add("sticky");
-            } else {
-                nav.classList.remove("sticky");
+        // Lazy loading implementation
+        class LazyImageLoader {
+            constructor() {
+                this.images = [];
+                this.imageObserver = null;
+                this.init();
             }
-        };
 
-        window.addEventListener('scroll', function () {
-            const nav = document.getElementById('nav');
-            const main = document.getElementById('main');
-            const navHeight = nav.offsetHeight;
-            const scrollPosition = window.scrollY;
-            if (scrollPosition >= main.offsetTop - navHeight) {
-                const offset = scrollPosition - (main.offsetTop - navHeight) + 3;
-                main.style.webkitMaskImage  = `linear-gradient(to bottom, transparent ${offset}px, black ${offset}px)`;
+            init() {
+                this.images = Array.from(document.querySelectorAll('img.lazy'));
+                this.createObserver();
+                this.observeImages();
+            }
+
+            createObserver() {
+                const options = {
+                    root: null,
+                    rootMargin: '50px',
+                    threshold: 0.1
+                };
+
+                this.imageObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            this.loadImage(entry.target);
+                        }
+                    });
+                }, options);
+            }
+
+            observeImages() {
+                this.images.forEach(img => {
+                    this.imageObserver.observe(img);
+                });
+            }
+
+            loadImage(img) {
+                const src = img.getAttribute('data-src');
+                if (!src) return;
+
+                img.classList.add('loading');
+                
+                const imageLoader = new Image();
+                imageLoader.onload = () => {
+                    img.src = src;
+                    img.classList.remove('loading');
+                    img.classList.add('loaded');
+                    this.imageObserver.unobserve(img);
+                };
+                
+                imageLoader.onerror = () => {
+                    img.classList.remove('loading');
+                    img.classList.add('error');
+                    this.imageObserver.unobserve(img);
+                };
+                
+                imageLoader.src = src;
+            }
+
+            // Add new images to observer (for dynamic content)
+            addImages(newImages) {
+                newImages.forEach(img => {
+                    this.images.push(img);
+                    this.imageObserver.observe(img);
+                });
+            }
+        }
+
+        // Initialize lazy loading when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new LazyImageLoader();
+        });
+
+        // Image optimization utilities
+        function getOptimizedImageUrl(originalUrl, width = 400, height = 300, quality = 80) {
+            // This is a placeholder function - in real implementation, you might use
+            // services like Cloudinary, ImageKit, or implement your own image optimization
+            const params = new URLSearchParams();
+            params.append('w', width);
+            params.append('h', height);
+            params.append('q', quality);
+            params.append('fm', 'webp'); // Use WebP format if supported
+            
+            return `${originalUrl}&${params.toString()}`;
+        }
+
+        // Check WebP support
+        function supportsWebP() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1;
+            canvas.height = 1;
+            return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+        }
+
+        // Existing functions
+        function toggleNews(element) {
+            const content = element.nextElementSibling;
+            const indicator = element.querySelector('.expand-indicator');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                indicator.classList.remove('expanded');
             } else {
-                main.style.webkitMaskImage  = 'none';
+                content.classList.add('expanded');
+                indicator.classList.add('expanded');
+                
+                // Trigger lazy loading for newly visible images
+                const lazyImages = content.querySelectorAll('img.lazy');
+                if (lazyImages.length > 0) {
+                    // Force intersection observer to check these images
+                    setTimeout(() => {
+                        lazyImages.forEach(img => {
+                            const rect = img.getBoundingClientRect();
+                            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                                // Image is in viewport, trigger loading if not already loaded
+                                if (img.getAttribute('data-src') && !img.src) {
+                                    img.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                }
+                            }
+                        });
+                    }, 100);
+                }
+            }
+        }
+
+        function openImageModal(img) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            
+            modal.style.display = 'block';
+            modalImg.src = img.src || img.getAttribute('data-src');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        function redirectToDetail(newsId) {
+            const baseUrl = 'https://modfluids.github.io/news/';
+            const targetUrl = baseUrl + newsId;
+            
+            alert(`跳转到详情页面: ${targetUrl}`);
+        }
+
+        // Performance monitoring
+        function measurePerformance() {
+            if ('performance' in window) {
+                window.addEventListener('load', () => {
+                    const navigation = performance.getEntriesByType('navigation')[0];
+                    const loadTime = navigation.loadEventEnd - navigation.loadEventStart;
+                    console.log(`Page load time: ${loadTime}ms`);
+                });
+            }
+        }
+
+        // Initialize performance monitoring
+        measurePerformance();
+
+        // Modal event listeners
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeImageModal();
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
             }
         });
+
+        // Preload critical images (optional)
+        function preloadCriticalImages() {
+            const criticalImages = [
+                // Add URLs of images that should be preloaded
+            ];
+            
+            criticalImages.forEach(src => {
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.as = 'image';
+                link.href = src;
+                document.head.appendChild(link);
+            });
+        }
+
+        // Initialize preloading
+        preloadCriticalImages();
     </script>
-
 </body>
-
 </html>
